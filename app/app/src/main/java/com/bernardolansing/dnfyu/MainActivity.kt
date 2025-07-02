@@ -9,8 +9,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,33 +44,29 @@ class MainActivity : ComponentActivity() {
             startSearchingForAnUmbrella()
         }
         setContent {
-            MainActivityLayout(status)
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray,
-        deviceId: Int
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
-        if (requestCode == RequestCodes.REQUEST_BT_PERMISSIONS) {
-            Log.i(null, "Received Bluetooth permissions prompt result")
-            if (grantResults.all { status -> status == PackageManager.PERMISSION_GRANTED }) {
-                Log.i(null, "Permissions were granted!")
-                if (checkIfBluetoothIsOn()) {
-                    startSearchingForAnUmbrella()
+            val requestPermissionsLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions(),
+            ) { grantResults: Map<String, Boolean> ->
+                if (grantResults.values.all { granted -> granted }) {
+                    Log.i(null, "Bluetooth permissions were granted")
+                    // Bluetooth permissions are okay, let's check if the Bluetooth service is on.
+                    // TODO: check if BT is on.
                 } else {
-                    // Permissions are granted, but Bluetooth service is turned off. We must prompt
-                    // user for they to turn it on.
-                    promptForBluetoothActivation() // This call will handle the state update if
-                    // successful.
+                    Log.i(null, "Bluetooth permissions were denied")
                 }
             }
-            else {
-                // TODO: handle permissions were denied event
-            }
+
+            MainActivityLayout(
+                status = status,
+                onGrantPermissions = {
+                    Log.i(null, "Requesting Bluetooth permissions")
+                    val permissions = arrayOf(
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                    )
+                    requestPermissionsLauncher.launch(permissions)
+                },
+            )
         }
     }
 
@@ -105,15 +103,6 @@ class MainActivity : ComponentActivity() {
         return false
     }
 
-    fun askBluetoothPermissions() {
-        Log.i(null, "Prompting for Bluetooth permissions")
-        val permissions = arrayOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-        )
-        requestPermissions(permissions, RequestCodes.REQUEST_BT_PERMISSIONS)
-    }
-
     private fun promptForBluetoothActivation() {
         Log.i(null, "Prompting for Bluetooth activation")
         val activityResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
@@ -135,17 +124,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private object RequestCodes {
-    const val REQUEST_BT_PERMISSIONS = 1
-}
-
 private enum class Status {
     MissingPermissions,
     Searching,
 }
 
 @Composable
-private fun MainActivityLayout(status: Status) {
+private fun MainActivityLayout(
+    status: Status,
+    onGrantPermissions: () -> Unit = {},
+) {
     DoNotForgetYourUmbrellaTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding ->
             Column(
@@ -155,7 +143,7 @@ private fun MainActivityLayout(status: Status) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 when (status) {
-                    Status.MissingPermissions -> PermissionsFrame()
+                    Status.MissingPermissions -> PermissionsFrame(onGrantPermissions)
                     Status.Searching -> OngoingScanFrame()
                 }
             }
@@ -164,7 +152,7 @@ private fun MainActivityLayout(status: Status) {
 }
 
 @Composable
-private fun PermissionsFrame() {
+private fun PermissionsFrame(onGrantPermissions: () -> Unit = {}) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(250.dp),
@@ -174,11 +162,7 @@ private fun PermissionsFrame() {
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(25.dp))
-        Button(
-            onClick = {
-                // TODO: ask for permissions
-            }
-        ) {
+        Button(onClick = onGrantPermissions) {
             Text(text = "Grant permissions")
         }
     }
