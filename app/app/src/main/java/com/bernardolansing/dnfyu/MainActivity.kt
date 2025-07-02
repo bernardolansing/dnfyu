@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,8 +43,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
 
-            // TODO: check BT permissions to determine initial state
-            val status = remember { mutableStateOf(Status.MissingPermissions) }
+            val status = remember {
+                if (checkBluetoothPermissions(context))
+                    mutableStateOf(Status.Searching)
+                else
+                    mutableStateOf(Status.MissingPermissions)
+            }
 
             val requestBluetoothActivationLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.StartActivityForResult(),
@@ -107,6 +113,26 @@ private fun checkIfBluetoothActivated(context: Context): Boolean {
 
     Log.i(null, "Bluetooth service is turned on")
     return true
+}
+
+private fun checkBluetoothPermissions(context: Context): Boolean {
+    Log.i(null, "Checking Bluetooth permissions")
+    val scanStatus = ContextCompat
+        .checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN)
+    val connectStatus = ContextCompat
+        .checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+    if (scanStatus == PackageManager.PERMISSION_DENIED
+        || connectStatus == PackageManager.PERMISSION_DENIED) {
+        Log.i(null, "Bluetooth permissions are not granted")
+        return false
+    }
+    Log.i(null, "Bluetooth permissions are OK")
+
+    if (checkIfBluetoothActivated(context)) {
+        Log.i(null, "All Bluetooth requirements all fulfilled, we're good to go")
+        return true
+    }
+    return false
 }
 
 @Composable
