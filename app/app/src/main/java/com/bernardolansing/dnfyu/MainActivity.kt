@@ -1,14 +1,17 @@
 package com.bernardolansing.dnfyu
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -55,9 +58,12 @@ class MainActivity : ComponentActivity() {
             if (grantResults.all { status -> status == PackageManager.PERMISSION_GRANTED }) {
                 Log.i(null, "Permissions were granted!")
                 if (checkIfBluetoothIsOn()) {
-                    // TODO: handle all permissions turned OK event
+                    startSearchingForAnUmbrella()
                 } else {
-                    // TODO: handle permissions granted, but BT was not turned on event
+                    // Permissions are granted, but Bluetooth service is turned off. We must prompt
+                    // user for they to turn it on.
+                    promptForBluetoothActivation() // This call will handle the state update if
+                    // successful.
                 }
             }
             else {
@@ -99,13 +105,27 @@ class MainActivity : ComponentActivity() {
         return false
     }
 
-    private fun askBluetoothPermissions() {
+    fun askBluetoothPermissions() {
         Log.i(null, "Prompting for Bluetooth permissions")
         val permissions = arrayOf(
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
         )
         requestPermissions(permissions, RequestCodes.REQUEST_BT_PERMISSIONS)
+    }
+
+    private fun promptForBluetoothActivation() {
+        Log.i(null, "Prompting for Bluetooth activation")
+        val activityResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                Log.i(null, "User enabled Bluetooth after prompt")
+                startSearchingForAnUmbrella()
+            } else {
+                Log.i(null, "User refused to enable Bluetooth")
+            }
+        }
+        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        activityResultLauncher.launch(intent)
     }
 
     private fun startSearchingForAnUmbrella() {
