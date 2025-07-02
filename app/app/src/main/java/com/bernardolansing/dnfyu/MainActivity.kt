@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,7 +12,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,38 +24,61 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
 
 class MainActivity : ComponentActivity() {
-    private var status = Status.MissingPermissions
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (checkBluetoothPermissions()) {
-            startSearchingForAnUmbrella()
-        }
         setContent {
+            val context = LocalContext.current
+
+            // TODO: check BT permissions to determine initial state
+            val status = remember { mutableStateOf(Status.MissingPermissions) }
+
+            val requestBluetoothActivationLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.StartActivityForResult(),
+            ) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    Log.i(null, "User enabled Bluetooth after prompt")
+                    status.value = Status.Searching
+                } else {
+                    Log.i(null, "User refused to enable Bluetooth")
+                    // TODO: provide better feedback
+                }
+            }
+
             val requestPermissionsLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions(),
             ) { grantResults: Map<String, Boolean> ->
                 if (grantResults.values.all { granted -> granted }) {
                     Log.i(null, "Bluetooth permissions were granted")
                     // Bluetooth permissions are okay, let's check if the Bluetooth service is on.
-                    // TODO: check if BT is on.
+                    if (checkIfBluetoothActivated(context)) {
+                        // Bluetooth is turned on, let's move to the next step.
+                        status.value = Status.Searching
+                    } else {
+                        // Bluetooth is off, so we're prompting the user for its activation.
+                        Log.i(null, "Prompting for Bluetooth activation")
+                        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        requestBluetoothActivationLauncher.launch(intent)
+                    }
                 } else {
                     Log.i(null, "Bluetooth permissions were denied")
+                    // TODO: provide better feedback
                 }
             }
 
             MainActivityLayout(
-                status = status,
+                status = status.value,
                 onGrantPermissions = {
                     Log.i(null, "Requesting Bluetooth permissions")
                     val permissions = arrayOf(
@@ -69,64 +90,23 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
-    private fun checkIfBluetoothIsOn(): Boolean {
-        Log.i(null, "Checking if Bluetooth service is powered")
-        val btManager = applicationContext
-            .getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        if (! btManager.adapter.isEnabled) {
-            Log.i(null, "Bluetooth service is turned off")
-            return false
-        }
-
-        Log.i(null, "Bluetooth service is turned on")
-        return true
-    }
-
-    private fun checkBluetoothPermissions(): Boolean {
-        Log.i(null, "Checking Bluetooth permissions")
-        val scanStatus = ContextCompat
-            .checkSelfPermission(applicationContext, Manifest.permission.BLUETOOTH_SCAN)
-        val connectStatus = ContextCompat
-            .checkSelfPermission(applicationContext, Manifest.permission.BLUETOOTH_CONNECT)
-        if (scanStatus == PackageManager.PERMISSION_DENIED
-            || connectStatus == PackageManager.PERMISSION_DENIED) {
-            Log.i(null, "Bluetooth permissions are not granted")
-            return false
-        }
-        Log.i(null, "Bluetooth permissions are OK")
-
-        if (checkIfBluetoothIsOn()) {
-            Log.i(null, "All Bluetooth requirements all fulfilled, we're good to go")
-            return true
-        }
-        return false
-    }
-
-    private fun promptForBluetoothActivation() {
-        Log.i(null, "Prompting for Bluetooth activation")
-        val activityResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                Log.i(null, "User enabled Bluetooth after prompt")
-                startSearchingForAnUmbrella()
-            } else {
-                Log.i(null, "User refused to enable Bluetooth")
-            }
-        }
-        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-        activityResultLauncher.launch(intent)
-    }
-
-    private fun startSearchingForAnUmbrella() {
-        Log.i(null, "Switching to 'searching' state")
-        status = Status.Searching
-        // TODO: start the Bluetooth scan
-    }
 }
 
 private enum class Status {
     MissingPermissions,
     Searching,
+}
+
+private fun checkIfBluetoothActivated(context: Context): Boolean {
+    Log.i(null, "Checking if Bluetooth service is powered")
+    val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    if (! btManager.adapter.isEnabled) {
+        Log.i(null, "Bluetooth service is turned off")
+        return false
+    }
+
+    Log.i(null, "Bluetooth service is turned on")
+    return true
 }
 
 @Composable
@@ -182,7 +162,7 @@ private fun OngoingScanFrame() {
         CircularProgressIndicator(
             modifier = Modifier.width(100.dp)
                 .height(100.dp),
-            strokeWidth = 6.dp
+            strokeWidth = 6.dp,
         )
     }
 }
