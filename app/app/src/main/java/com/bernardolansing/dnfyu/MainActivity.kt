@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,11 +30,16 @@ import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
 
 class MainActivity : ComponentActivity() {
+    private var status = Status.MissingPermissions
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (checkBluetoothPermissions()) {
+            startSearchingForAnUmbrella()
+        }
         setContent {
-            MainActivityLayout()
+            MainActivityLayout(status)
         }
     }
 
@@ -101,15 +107,25 @@ class MainActivity : ComponentActivity() {
         )
         requestPermissions(permissions, RequestCodes.REQUEST_BT_PERMISSIONS)
     }
+
+    private fun startSearchingForAnUmbrella() {
+        Log.i(null, "Switching to 'searching' state")
+        status = Status.Searching
+        // TODO: start the Bluetooth scan
+    }
 }
 
 private object RequestCodes {
     const val REQUEST_BT_PERMISSIONS = 1
 }
 
-@Preview(showBackground = true)
+private enum class Status {
+    MissingPermissions,
+    Searching,
+}
+
 @Composable
-fun MainActivityLayout() {
+private fun MainActivityLayout(status: Status) {
     DoNotForgetYourUmbrellaTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding ->
             Column(
@@ -118,14 +134,17 @@ fun MainActivityLayout() {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                PermissionsFrame()
+                when (status) {
+                    Status.MissingPermissions -> PermissionsFrame()
+                    Status.Searching -> OngoingScanFrame()
+                }
             }
         }
     }
 }
 
 @Composable
-fun PermissionsFrame() {
+private fun PermissionsFrame() {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(250.dp),
@@ -143,4 +162,35 @@ fun PermissionsFrame() {
             Text(text = "Grant permissions")
         }
     }
+}
+
+@Composable
+private fun OngoingScanFrame() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(250.dp),
+    ) {
+        Text(
+            text = "Wait while we search for your umbrella in the surroundings.",
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(25.dp))
+        CircularProgressIndicator(
+            modifier = Modifier.width(100.dp)
+                .height(100.dp),
+            strokeWidth = 6.dp
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MissingPermissionsMainActivityLayout() {
+    MainActivityLayout(Status.MissingPermissions)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun OngoingScanMainActivityLayout() {
+    MainActivityLayout(Status.Searching)
 }
