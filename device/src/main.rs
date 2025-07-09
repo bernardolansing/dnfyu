@@ -30,7 +30,16 @@ fn main() {
         .set_data(&mut advertisement_data)
         .expect("Failed to set advertisement data");
 
+    // Set some advertising configurations. The intervals define how often the advertisement will
+    // be sent. Shorter intervals will ensure more resolution for the signal intensity tracking in
+    // the app side, but will also cause more power to be drawn. The numbers provided are units of
+    // 0.625 ms. The minimum interval possible is 20 ms (so 32 units).
+    // The other settings are for giving hints about connectability and discoverability details.
+    // As our application is a closed system, they aren't really useful for us. So we can just let
+    // them this way.
     ble_advertiser.lock()
+        .min_interval(32)
+        .max_interval(64)
         .advertisement_type(ConnMode::Non)
         .disc_mode(DiscMode::Gen)
         .scan_response(false);
