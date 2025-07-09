@@ -1,8 +1,11 @@
 package com.bernardolansing.dnfyu
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,6 +16,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,6 +42,7 @@ import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,6 +54,12 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(Status.Searching)
                 else
                     mutableStateOf(Status.MissingPermissions)
+            }
+
+            LaunchedEffect(status) {
+                if (status.value == Status.Searching) {
+                    startBleScan(context) { }
+                }
             }
 
             val requestBluetoothActivationLauncher = rememberLauncherForActivityResult(
@@ -133,6 +145,22 @@ private fun checkBluetoothPermissions(context: Context): Boolean {
         return true
     }
     return false
+}
+
+@RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
+private fun startBleScan(context: Context, onUmbrellaFound: (Float) -> Unit) {
+    Log.i(null, "Starting BLE scan")
+    val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
+    val scanCallback = object : ScanCallback() {
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            Log.i(null, "Found device: ${result?.device?.name}")
+        }
+    }
+
+    btManager.adapter.bluetoothLeScanner.startScan(scanCallback)
 }
 
 @Composable
