@@ -5,11 +5,14 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.ParcelUuid
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -148,19 +151,30 @@ private fun checkBluetoothPermissions(context: Context): Boolean {
 }
 
 @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
-private fun startBleScan(context: Context, onUmbrellaFound: (Float) -> Unit) {
+private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
     Log.i(null, "Starting BLE scan")
     val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
+    val scanFilters = listOf(
+        // Filter advertisements that provide the dnfyu UUID packet.
+        ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid.fromString("9f3b8e2a-0000-1000-8000-00805f9b34fb"))
+            .build(),
+    )
+
+    val scanSettings = ScanSettings.Builder().build()
 
     val scanCallback = object : ScanCallback() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
-            Log.i(null, "Found device: ${result?.device?.name}")
+            if (result != null) {
+                onUmbrellaFound.invoke(result.rssi)
+            }
         }
     }
 
-    btManager.adapter.bluetoothLeScanner.startScan(scanCallback)
+    btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 }
 
 @Composable
