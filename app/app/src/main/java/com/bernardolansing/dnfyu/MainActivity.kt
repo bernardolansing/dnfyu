@@ -11,6 +11,8 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.ParcelUuid
 import android.util.Log
@@ -107,7 +109,10 @@ class MainActivity : ComponentActivity() {
                                 status.value = Status.TrackingUmbrella
                             }
                         } catch (error: UmbrellaWasForgotten) {
-                            status.value = Status.ForgottenUmbrella
+                            if (status.value != Status.ForgottenUmbrella) {
+                                status.value = Status.ForgottenUmbrella
+                                ringAlertSound(context)
+                            }
                         }
                     }
                 }
@@ -228,6 +233,16 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
 private fun guessDistanceFromSignalIntensity(intensity: Int): Int {
     // TODO: this was not even tested; perform some real measures to model the signal strength decay
     return (intensity.absoluteValue - 30) / 2
+}
+
+private fun ringAlertSound(context: Context) {
+    Log.i(null, "Ringing alert scream to notify of the forgottal")
+    val mediaPlayer = MediaPlayer.create(context, R.raw.alert_scream)
+    val attributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_ALARM)
+        .build()
+    mediaPlayer.setAudioAttributes(attributes)
+    mediaPlayer.start()
 }
 
 @Composable
