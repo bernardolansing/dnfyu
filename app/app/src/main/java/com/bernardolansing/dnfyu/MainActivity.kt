@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var packetsReceivedWithinLastSecond = 0
+        val forgottalEvaluator = ForgottalEvaluator()
 
         setContent {
             val context = LocalContext.current
@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 if (status.value == Status.Searching) {
                     startBleScan(context) { intensity ->
                         Log.i(null, "Received advertisement packet from umbrella")
-                        packetsReceivedWithinLastSecond += 1
+                        forgottalEvaluator.reportPacketReceipt(intensity)
                         signalStrength.value = intensity
                         if (status.value != Status.TrackingUmbrella) {
                             status.value = Status.TrackingUmbrella
@@ -99,8 +99,7 @@ class MainActivity : ComponentActivity() {
                     delay(1000)
                     if (status.value == Status.TrackingUmbrella) {
                         Log.i(null, "Updating packet rate")
-                        packetRate.value = packetsReceivedWithinLastSecond
-                        packetsReceivedWithinLastSecond = 0
+                        packetRate.value = forgottalEvaluator.getPacketReceiptRate()
                     }
                 }
             }
