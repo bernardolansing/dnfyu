@@ -296,14 +296,23 @@ private fun OngoingScanFrame() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(250.dp),
     ) {
+        Image(
+            painter = painterResource(R.drawable.johnny_travolta),
+            contentDescription = "Confused Johnny Travolta",
+            modifier = Modifier.height(140.dp),
+        )
+
+        Spacer(modifier = Modifier.height(25.dp))
+
         Text(
             text = "Wait while we search for your umbrella in the surroundings.",
             textAlign = TextAlign.Center,
         )
+
         Spacer(modifier = Modifier.height(25.dp))
+
         CircularProgressIndicator(
-            modifier = Modifier
-                .width(100.dp)
+            modifier = Modifier.width(100.dp)
                 .height(100.dp),
             strokeWidth = 6.dp,
         )
