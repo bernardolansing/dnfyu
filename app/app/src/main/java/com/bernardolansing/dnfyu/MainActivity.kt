@@ -20,6 +20,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,11 +40,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
+import kotlin.math.absoluteValue
 
 private enum class Status {
     MissingPermissions,
@@ -187,6 +192,11 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
     btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 }
 
+private fun guessDistanceFromSignalIntensity(intensity: Int): Int {
+    // TODO: this was not even tested; perform some real measures to model the signal strength decay
+    return (intensity.absoluteValue - 30) / 2
+}
+
 @Composable
 private fun MainActivityLayout(
     status: Status,
@@ -249,7 +259,24 @@ private fun OngoingScanFrame() {
 
 @Composable
 private fun TrackingUmbrellaFrame(intensity: Int) {
-    Text(text = intensity.toString())
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = "Umbrella figure",
+        )
+
+        Text(
+            text = "Your umbrella is near!",
+            fontSize = 28.sp,
+        )
+
+        Spacer(modifier = Modifier.height(50.dp))
+
+        Text(text = "Signal intensity: ${intensity}dBm")
+        Text(text = "Distância estimada: ${guessDistanceFromSignalIntensity(intensity)}m")
+    }
 }
 
 @Preview(showBackground = true)
