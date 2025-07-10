@@ -38,14 +38,12 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -197,7 +195,10 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
             .build(),
     )
 
-    val scanSettings = ScanSettings.Builder().build()
+    val scanSettings = ScanSettings.Builder()
+        .setReportDelay(0)
+        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        .build()
 
     val scanCallback = object : ScanCallback() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
