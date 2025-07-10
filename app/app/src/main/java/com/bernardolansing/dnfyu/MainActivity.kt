@@ -33,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,6 +44,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
+
+private enum class Status {
+    MissingPermissions,
+    Searching,
+    TrackingUmbrella,
+}
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("MissingPermission")
@@ -59,9 +66,16 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(Status.MissingPermissions)
             }
 
+            val signalStrength: MutableState<Int?> = remember { mutableStateOf(null) }
+
             LaunchedEffect(status) {
                 if (status.value == Status.Searching) {
-                    startBleScan(context) { }
+                    startBleScan(context) { intensity ->
+                        signalStrength.value = intensity
+                        if (status.value != Status.TrackingUmbrella) {
+                            status.value = Status.TrackingUmbrella
+                        }
+                    }
                 }
             }
 
@@ -100,6 +114,7 @@ class MainActivity : ComponentActivity() {
 
             MainActivityLayout(
                 status = status.value,
+                signalIntensity = signalStrength.value,
                 onGrantPermissions = {
                     Log.i(null, "Requesting Bluetooth permissions")
                     val permissions = arrayOf(
@@ -111,11 +126,6 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-}
-
-private enum class Status {
-    MissingPermissions,
-    Searching,
 }
 
 private fun checkIfBluetoothActivated(context: Context): Boolean {
@@ -180,6 +190,7 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
 @Composable
 private fun MainActivityLayout(
     status: Status,
+    signalIntensity: Int?,
     onGrantPermissions: () -> Unit = {},
 ) {
     DoNotForgetYourUmbrellaTheme {
@@ -193,6 +204,7 @@ private fun MainActivityLayout(
                 when (status) {
                     Status.MissingPermissions -> PermissionsFrame(onGrantPermissions)
                     Status.Searching -> OngoingScanFrame()
+                    Status.TrackingUmbrella -> TrackingUmbrellaFrame(intensity = signalIntensity!!)
                 }
             }
         }
@@ -235,14 +247,25 @@ private fun OngoingScanFrame() {
     }
 }
 
+@Composable
+private fun TrackingUmbrellaFrame(intensity: Int) {
+    Text(text = intensity.toString())
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MissingPermissionsMainActivityLayout() {
-    MainActivityLayout(Status.MissingPermissions)
+    MainActivityLayout(status = Status.MissingPermissions, signalIntensity = null)
 }
 
 @Preview(showBackground = true)
 @Composable
 fun OngoingScanMainActivityLayout() {
-    MainActivityLayout(Status.Searching)
+    MainActivityLayout(status = Status.Searching, signalIntensity = null)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TrackingUmbrellaMainActivityLayout() {
+    MainActivityLayout(status = Status.TrackingUmbrella, signalIntensity = 50)
 }
