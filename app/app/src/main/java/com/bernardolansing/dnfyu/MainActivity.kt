@@ -35,8 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
+import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 
 private enum class Status {
@@ -61,6 +64,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        var packetsReceivedWithinLastSecond = 0
+
         setContent {
             val context = LocalContext.current
 
@@ -70,16 +76,29 @@ class MainActivity : ComponentActivity() {
                 else
                     mutableStateOf(Status.MissingPermissions)
             }
-
             val signalStrength: MutableState<Int?> = remember { mutableStateOf(null) }
+            val packetRate: MutableState<Int> = remember { mutableIntStateOf(0) }
 
             LaunchedEffect(status) {
                 if (status.value == Status.Searching) {
                     startBleScan(context) { intensity ->
+                        Log.i(null, "Received advertisement packet from umbrella")
+                        packetsReceivedWithinLastSecond += 1
                         signalStrength.value = intensity
                         if (status.value != Status.TrackingUmbrella) {
                             status.value = Status.TrackingUmbrella
                         }
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(1000)
+                    if (status.value == Status.TrackingUmbrella) {
+                        Log.i(null, "Updating packet rate")
+                        packetRate.value = packetsReceivedWithinLastSecond
+                        packetsReceivedWithinLastSecond = 0
                     }
                 }
             }
@@ -120,6 +139,7 @@ class MainActivity : ComponentActivity() {
             MainActivityLayout(
                 status = status.value,
                 signalIntensity = signalStrength.value,
+                packetsPerSec = packetRate.value,
                 onGrantPermissions = {
                     Log.i(null, "Requesting Bluetooth permissions")
                     val permissions = arrayOf(
@@ -201,12 +221,14 @@ private fun guessDistanceFromSignalIntensity(intensity: Int): Int {
 private fun MainActivityLayout(
     status: Status,
     signalIntensity: Int?,
+    packetsPerSec: Int = 0,
     onGrantPermissions: () -> Unit = {},
 ) {
     DoNotForgetYourUmbrellaTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding ->
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .padding(contentPadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -214,7 +236,10 @@ private fun MainActivityLayout(
                 when (status) {
                     Status.MissingPermissions -> PermissionsFrame(onGrantPermissions)
                     Status.Searching -> OngoingScanFrame()
-                    Status.TrackingUmbrella -> TrackingUmbrellaFrame(intensity = signalIntensity!!)
+                    Status.TrackingUmbrella -> TrackingUmbrellaFrame(
+                        intensity = signalIntensity!!,
+                        packetsPerSec = packetsPerSec,
+                    )
                 }
             }
         }
@@ -250,7 +275,8 @@ private fun OngoingScanFrame() {
         )
         Spacer(modifier = Modifier.height(25.dp))
         CircularProgressIndicator(
-            modifier = Modifier.width(100.dp)
+            modifier = Modifier
+                .width(100.dp)
                 .height(100.dp),
             strokeWidth = 6.dp,
         )
@@ -258,7 +284,7 @@ private fun OngoingScanFrame() {
 }
 
 @Composable
-private fun TrackingUmbrellaFrame(intensity: Int) {
+private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -274,8 +300,9 @@ private fun TrackingUmbrellaFrame(intensity: Int) {
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Text(text = "Signal intensity: ${intensity}dBm")
-        Text(text = "Distância estimada: ${guessDistanceFromSignalIntensity(intensity)}m")
+        Text(text = "Signal intensity: $intensity dBm")
+        Text(text = "Distância estimada: ${guessDistanceFromSignalIntensity(intensity)} m")
+        Text(text = "Packets por segundo: $packetsPerSec Hz")
     }
 }
 
