@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
 import kotlinx.coroutines.delay
-import kotlin.math.absoluteValue
 
 private enum class Status {
     MissingPermissions,
@@ -234,11 +233,6 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
     btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 }
 
-private fun guessDistanceFromSignalIntensity(intensity: Int): Int {
-    // TODO: this was not even tested; perform some real measures to model the signal strength decay
-    return (intensity.absoluteValue - 30) / 2
-}
-
 private fun ringAlertSound(context: Context) {
     Log.i(null, "Ringing alert scream to notify of the forgottal")
     val mediaPlayer = MediaPlayer.create(context, R.raw.alert_scream)
@@ -335,8 +329,7 @@ private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
         Spacer(modifier = Modifier.height(50.dp))
 
         Text(text = "Signal intensity: $intensity dBm")
-        Text(text = "Distância estimada: ${guessDistanceFromSignalIntensity(intensity)} m")
-        Text(text = "Packets por segundo: $packetsPerSec Hz")
+        Text(text = "Packets per second: $packetsPerSec Hz")
     }
 }
 
