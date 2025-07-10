@@ -51,6 +51,10 @@ class ForgottalEvaluator {
         return inReach
     }
 
+    fun wasUmbrellaTurnedOff(): Boolean {
+        return inReach && packetRate == 0
+    }
+
     private fun averagePacketSignalIntensity(): Int {
         if (packetsReceivedDeque.isEmpty()) {
             return 0

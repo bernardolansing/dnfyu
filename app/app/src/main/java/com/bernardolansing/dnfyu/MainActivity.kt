@@ -114,6 +114,10 @@ class MainActivity : ComponentActivity() {
                             Log.i(null, "Umbrella is in reach again")
                             status.value = Status.TrackingUmbrella
                         }
+                        else if (forgottalEvaluator.wasUmbrellaTurnedOff()) {
+                            Log.i(null, "Umbrella seems to have been turned off")
+                            status.value = Status.Searching
+                        }
                     }
                 }
             }
