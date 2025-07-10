@@ -40,6 +40,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +58,7 @@ private enum class Status {
     MissingPermissions,
     Searching,
     TrackingUmbrella,
+    ForgottenUmbrella,
 }
 
 class MainActivity : ComponentActivity() {
@@ -241,6 +245,7 @@ private fun MainActivityLayout(
                         intensity = signalIntensity!!,
                         packetsPerSec = packetsPerSec,
                     )
+                    Status.ForgottenUmbrella -> ForgottenUmbrellaFrame()
                 }
             }
         }
@@ -296,6 +301,7 @@ private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
 
         Text(
             text = "Your umbrella is near!",
+            textAlign = TextAlign.Center,
             fontSize = 28.sp,
         )
 
@@ -305,6 +311,25 @@ private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
         Text(text = "Distância estimada: ${guessDistanceFromSignalIntensity(intensity)} m")
         Text(text = "Packets por segundo: $packetsPerSec Hz")
     }
+}
+
+@Composable
+private fun ForgottenUmbrellaFrame() {
+    Image(
+        painter = painterResource(R.drawable.ic_launcher_foreground),
+        colorFilter = ColorFilter.tint(color = Color.Red),
+        modifier = Modifier.rotate(180.0F),
+        contentDescription = "Umbrella figure",
+    )
+
+    Spacer(modifier = Modifier.height(30.dp))
+
+    Text(
+        text = "You have forgotten your umbrella!!!",
+        textAlign = TextAlign.Center,
+        lineHeight = 32.sp,
+        fontSize = 28.sp,
+    )
 }
 
 @Preview(showBackground = true)
@@ -323,4 +348,10 @@ fun OngoingScanMainActivityLayout() {
 @Composable
 fun TrackingUmbrellaMainActivityLayout() {
     MainActivityLayout(status = Status.TrackingUmbrella, signalIntensity = 50)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ForgottenUmbrellaMainActivityLayout() {
+    MainActivityLayout(status = Status.ForgottenUmbrella, signalIntensity = null)
 }
