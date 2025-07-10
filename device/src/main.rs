@@ -1,9 +1,9 @@
 use esp32_nimble::utilities::BleUuid;
 use esp32_nimble::{BLEAdvertisementData, BLEDevice};
-use esp32_nimble::enums::{ConnMode, DiscMode};
+use esp32_nimble::enums::{ConnMode, DiscMode, PowerLevel, PowerType};
 use esp_idf_svc::hal::delay::FreeRtos;
 
-const SERVICE_DATA: BleUuid = BleUuid::from_uuid32(0x9f3b8e2a); // Random UUID for identifying the
+const SERVICE_UUID: BleUuid = BleUuid::from_uuid32(0x9f3b8e2a); // Random UUID for identifying the
 // umbrella between all advertisements.
 const APPEARANCE_CODE: u16 = 512; // Mark "tag" as the device category (check Bluetooth assigned
 // numbers document, section 2.6.2).
@@ -20,11 +20,13 @@ fn main() {
     log::info!("Setting up.");
 
     let ble_device = BLEDevice::take();
+    ble_device.set_power(PowerType::Advertising, PowerLevel::P9)
+        .expect("Failed to adjust power level for BLE advertisement");
     let ble_advertiser = ble_device.get_advertising();
 
     let mut advertisement_data = BLEAdvertisementData::new();
     advertisement_data.appearance(APPEARANCE_CODE);
-    advertisement_data.add_service_uuid(SERVICE_DATA);
+    advertisement_data.add_service_uuid(SERVICE_UUID);
 
     ble_advertiser.lock()
         .set_data(&mut advertisement_data)
