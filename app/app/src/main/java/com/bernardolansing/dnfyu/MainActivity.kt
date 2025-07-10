@@ -15,6 +15,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.ParcelUuid
+import android.text.style.BackgroundColorSpan
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,7 +23,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -47,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -296,10 +301,16 @@ private fun OngoingScanFrame() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(250.dp),
     ) {
+        val imageColorFilter = if (isSystemInDarkTheme()) {
+            ColorFilter.tint(color = Color.White)
+        } else {
+            null
+        }
         Image(
             painter = painterResource(R.drawable.johnny_travolta),
             contentDescription = "Confused Johnny Travolta",
             modifier = Modifier.height(140.dp),
+            colorFilter = imageColorFilter
         )
 
         Spacer(modifier = Modifier.height(25.dp))
@@ -324,9 +335,15 @@ private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val imageColorFilter = if (isSystemInDarkTheme()) {
+            ColorFilter.tint(Color.White)
+        } else {
+            null
+        }
         Image(
             painter = painterResource(R.drawable.ic_launcher_foreground),
             contentDescription = "Umbrella figure",
+            colorFilter = imageColorFilter
         )
 
         Text(
@@ -344,21 +361,33 @@ private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
 
 @Composable
 private fun ForgottenUmbrellaFrame() {
-    Image(
-        painter = painterResource(R.drawable.ic_launcher_foreground),
-        colorFilter = ColorFilter.tint(color = Color.Red),
-        modifier = Modifier.rotate(180.0F),
-        contentDescription = "Umbrella figure",
-    )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xffff474c)), // Fundo vermelho apenas aqui
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            modifier = Modifier
+                .size(180.dp)
+                .rotate(180.0F),
+            contentDescription = "Umbrella figure",
+            colorFilter = ColorFilter.tint(Color.White),
+        )
 
-    Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
-    Text(
-        text = "You have forgotten your umbrella!!!",
-        textAlign = TextAlign.Center,
-        lineHeight = 32.sp,
-        fontSize = 28.sp,
-    )
+        Text(
+            text = "You have forgotten your umbrella!!!".uppercase(),
+            textAlign = TextAlign.Center,
+            lineHeight = 32.sp,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -379,7 +408,7 @@ fun TrackingUmbrellaMainActivityLayout() {
     MainActivityLayout(status = Status.TrackingUmbrella, signalIntensity = 50)
 }
 
-@Preview(showBackground = true)
+@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO, showBackground = true)
 @Composable
 fun ForgottenUmbrellaMainActivityLayout() {
     MainActivityLayout(status = Status.ForgottenUmbrella, signalIntensity = null)
