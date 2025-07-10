@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         Log.i(null, "Received advertisement packet from umbrella")
                         forgottalEvaluator.reportPacketReceipt(intensity)
                         signalStrength.value = intensity
-                        if (status.value != Status.TrackingUmbrella) {
+                        if (status.value == Status.Searching) {
                             status.value = Status.TrackingUmbrella
                         }
                     }
@@ -97,9 +97,18 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 while (true) {
                     delay(1000)
-                    if (status.value == Status.TrackingUmbrella) {
+                    if (status.value == Status.TrackingUmbrella
+                        || status.value == Status.ForgottenUmbrella) {
                         Log.i(null, "Updating packet rate")
-                        packetRate.value = forgottalEvaluator.getPacketReceiptRate()
+                        try {
+                            packetRate.value = forgottalEvaluator.getPacketReceiptRate()
+                            if (status.value == Status.ForgottenUmbrella) {
+                                Log.i(null, "Umbrella is in reach again")
+                                status.value = Status.TrackingUmbrella
+                            }
+                        } catch (error: UmbrellaWasForgotten) {
+                            status.value = Status.ForgottenUmbrella
+                        }
                     }
                 }
             }
