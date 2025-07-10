@@ -101,18 +101,18 @@ class MainActivity : ComponentActivity() {
                     delay(1000)
                     if (status.value == Status.TrackingUmbrella
                         || status.value == Status.ForgottenUmbrella) {
-                        Log.i(null, "Updating packet rate")
-                        try {
-                            packetRate.value = forgottalEvaluator.getPacketReceiptRate()
-                            if (status.value == Status.ForgottenUmbrella) {
-                                Log.i(null, "Umbrella is in reach again")
-                                status.value = Status.TrackingUmbrella
-                            }
-                        } catch (error: UmbrellaWasForgotten) {
-                            if (status.value != Status.ForgottenUmbrella) {
-                                status.value = Status.ForgottenUmbrella
-                                ringAlertSound(context)
-                            }
+                        forgottalEvaluator.update()
+                        packetRate.value = forgottalEvaluator.getPacketReceiptRate()
+                        val umbrellaInReach = forgottalEvaluator.isUmbrellaInReach()
+
+                        if (status.value == Status.TrackingUmbrella && ! umbrellaInReach) {
+                            Log.i(null, "Umbrella seems to have been forgotten")
+                            status.value = Status.ForgottenUmbrella
+                            ringAlertSound(context)
+                        }
+                        else if (status.value == Status.ForgottenUmbrella && umbrellaInReach) {
+                            Log.i(null, "Umbrella is in reach again")
+                            status.value = Status.TrackingUmbrella
                         }
                     }
                 }
