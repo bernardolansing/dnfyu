@@ -1,18 +1,31 @@
 package com.bernardolansing.dnfyu
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.ParcelUuid
+import android.text.style.BackgroundColorSpan
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,26 +33,48 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.bernardolansing.dnfyu.ui.theme.DoNotForgetYourUmbrellaTheme
+import kotlinx.coroutines.delay
+
+private enum class Status {
+    MissingPermissions,
+    Searching,
+    TrackingUmbrella,
+    ForgottenUmbrella,
+}
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val forgottalEvaluator = ForgottalEvaluator()
+
         setContent {
             val context = LocalContext.current
 
@@ -48,6 +83,47 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(Status.Searching)
                 else
                     mutableStateOf(Status.MissingPermissions)
+            }
+            val signalStrength: MutableState<Int?> = remember { mutableStateOf(null) }
+            val packetRate: MutableState<Int> = remember { mutableIntStateOf(0) }
+
+            LaunchedEffect(status) {
+                if (status.value == Status.Searching) {
+                    startBleScan(context) { intensity ->
+                        Log.i(null, "Received advertisement packet from umbrella")
+                        forgottalEvaluator.reportPacketReceipt(intensity)
+                        signalStrength.value = intensity
+                        if (status.value == Status.Searching) {
+                            status.value = Status.TrackingUmbrella
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(1000)
+                    if (status.value == Status.TrackingUmbrella
+                        || status.value == Status.ForgottenUmbrella) {
+                        forgottalEvaluator.update()
+                        packetRate.value = forgottalEvaluator.getPacketReceiptRate()
+                        val umbrellaInReach = forgottalEvaluator.isUmbrellaInReach()
+
+                        if (status.value == Status.TrackingUmbrella && ! umbrellaInReach) {
+                            Log.i(null, "Umbrella seems to have been forgotten")
+                            status.value = Status.ForgottenUmbrella
+                            ringAlertSound(context)
+                        }
+                        else if (status.value == Status.ForgottenUmbrella && umbrellaInReach) {
+                            Log.i(null, "Umbrella is in reach again")
+                            status.value = Status.TrackingUmbrella
+                        }
+                        else if (forgottalEvaluator.wasUmbrellaTurnedOff()) {
+                            Log.i(null, "Umbrella seems to have been turned off")
+                            status.value = Status.Searching
+                        }
+                    }
+                }
             }
 
             val requestBluetoothActivationLauncher = rememberLauncherForActivityResult(
@@ -85,6 +161,8 @@ class MainActivity : ComponentActivity() {
 
             MainActivityLayout(
                 status = status.value,
+                signalIntensity = signalStrength.value,
+                packetsPerSec = packetRate.value,
                 onGrantPermissions = {
                     Log.i(null, "Requesting Bluetooth permissions")
                     val permissions = arrayOf(
@@ -96,11 +174,6 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-}
-
-private enum class Status {
-    MissingPermissions,
-    Searching,
 }
 
 private fun checkIfBluetoothActivated(context: Context): Boolean {
@@ -135,15 +208,58 @@ private fun checkBluetoothPermissions(context: Context): Boolean {
     return false
 }
 
+@RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
+private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
+    Log.i(null, "Starting BLE scan")
+    val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
+    val scanFilters = listOf(
+        // Filter advertisements that provide the dnfyu UUID packet.
+        ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid.fromString("9f3b8e2a-0000-1000-8000-00805f9b34fb"))
+            .build(),
+    )
+
+    val scanSettings = ScanSettings.Builder()
+        .setReportDelay(0)
+        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        .build()
+
+    val scanCallback = object : ScanCallback() {
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            if (result != null) {
+                onUmbrellaFound.invoke(result.rssi)
+            }
+        }
+    }
+
+    btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+}
+
+private fun ringAlertSound(context: Context) {
+    Log.i(null, "Ringing alert scream to notify of the forgottal")
+    val mediaPlayer = MediaPlayer.create(context, R.raw.alert_scream)
+    val attributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_ALARM)
+        .build()
+    mediaPlayer.setAudioAttributes(attributes)
+    mediaPlayer.start()
+}
+
 @Composable
 private fun MainActivityLayout(
     status: Status,
+    signalIntensity: Int?,
+    packetsPerSec: Int = 0,
     onGrantPermissions: () -> Unit = {},
 ) {
     DoNotForgetYourUmbrellaTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding ->
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .padding(contentPadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -151,6 +267,11 @@ private fun MainActivityLayout(
                 when (status) {
                     Status.MissingPermissions -> PermissionsFrame(onGrantPermissions)
                     Status.Searching -> OngoingScanFrame()
+                    Status.TrackingUmbrella -> TrackingUmbrellaFrame(
+                        intensity = signalIntensity!!,
+                        packetsPerSec = packetsPerSec,
+                    )
+                    Status.ForgottenUmbrella -> ForgottenUmbrellaFrame()
                 }
             }
         }
@@ -180,11 +301,27 @@ private fun OngoingScanFrame() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(250.dp),
     ) {
+        val imageColorFilter = if (isSystemInDarkTheme()) {
+            ColorFilter.tint(color = Color.White)
+        } else {
+            null
+        }
+        Image(
+            painter = painterResource(R.drawable.johnny_travolta),
+            contentDescription = "Confused Johnny Travolta",
+            modifier = Modifier.height(140.dp),
+            colorFilter = imageColorFilter
+        )
+
+        Spacer(modifier = Modifier.height(25.dp))
+
         Text(
             text = "Wait while we search for your umbrella in the surroundings.",
             textAlign = TextAlign.Center,
         )
+
         Spacer(modifier = Modifier.height(25.dp))
+
         CircularProgressIndicator(
             modifier = Modifier.width(100.dp)
                 .height(100.dp),
@@ -193,14 +330,86 @@ private fun OngoingScanFrame() {
     }
 }
 
+@Composable
+private fun TrackingUmbrellaFrame(intensity: Int, packetsPerSec: Int = 0) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        val imageColorFilter = if (isSystemInDarkTheme()) {
+            ColorFilter.tint(Color.White)
+        } else {
+            null
+        }
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = "Umbrella figure",
+            colorFilter = imageColorFilter
+        )
+
+        Text(
+            text = "Your umbrella is near!",
+            textAlign = TextAlign.Center,
+            fontSize = 28.sp,
+        )
+
+        Spacer(modifier = Modifier.height(50.dp))
+
+        Text(text = "Signal intensity: $intensity dBm")
+        Text(text = "Packets per second: $packetsPerSec Hz")
+    }
+}
+
+@Composable
+private fun ForgottenUmbrellaFrame() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xffff474c)), // Fundo vermelho apenas aqui
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            modifier = Modifier
+                .size(180.dp)
+                .rotate(180.0F),
+            contentDescription = "Umbrella figure",
+            colorFilter = ColorFilter.tint(Color.White),
+        )
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        Text(
+            text = "You have forgotten your umbrella!!!".uppercase(),
+            textAlign = TextAlign.Center,
+            lineHeight = 32.sp,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MissingPermissionsMainActivityLayout() {
-    MainActivityLayout(Status.MissingPermissions)
+    MainActivityLayout(status = Status.MissingPermissions, signalIntensity = null)
 }
 
 @Preview(showBackground = true)
 @Composable
 fun OngoingScanMainActivityLayout() {
-    MainActivityLayout(Status.Searching)
+    MainActivityLayout(status = Status.Searching, signalIntensity = null)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TrackingUmbrellaMainActivityLayout() {
+    MainActivityLayout(status = Status.TrackingUmbrella, signalIntensity = 50)
+}
+
+@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO, showBackground = true)
+@Composable
+fun ForgottenUmbrellaMainActivityLayout() {
+    MainActivityLayout(status = Status.ForgottenUmbrella, signalIntensity = null)
 }
