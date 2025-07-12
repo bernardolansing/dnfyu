@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            
+
             val status = remember {
                 if (checkBluetoothPermissions(context))
                     mutableStateOf(Status.Searching)
@@ -272,6 +272,26 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
         }
     }
 
+    val channelId = "umbrella_foreground_channel"
+
+    val channel = NotificationChannel(
+        channelId,
+        "Umbrella Scan Service",
+        NotificationManager.IMPORTANCE_LOW
+    )
+    val notificationManager = context.getSystemService(NotificationManager::class.java)
+    notificationManager.createNotificationChannel(channel)
+
+    val notification = NotificationCompat.Builder(context, channelId)
+        .setContentTitle("Looking for your umbrella...")
+        .setContentText("BLE scan in progress")
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setOngoing(true)
+        .build()
+
+    val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    NotificationManagerCompat.from(context).notify(2, notification)
+
     btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 }
 
@@ -291,19 +311,17 @@ private fun showUmbrellaForgottenNotification(context: Context) {
     val channelId = "umbrella_alert_channel"
 
     // Cria o canal de notificação (obrigatório no Android 8+)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val name = "Umbrella Alerts"
-        val descriptionText = "Alerts when umbrella is forgotten"
-        val importance = NotificationManager.IMPORTANCE_HIGH
-        val channel = NotificationChannel(channelId, name, importance).apply {
-            description = descriptionText
-            enableVibration(true)
-            enableLights(true)
-        }
-        val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
+    val name = "Umbrella Alerts"
+    val descriptionText = "Alerts when umbrella is forgotten"
+    val importance = NotificationManager.IMPORTANCE_HIGH
+    val channel = NotificationChannel(channelId, name, importance).apply {
+        description = descriptionText
+        enableVibration(true)
+        enableLights(true)
     }
+    val notificationManager: NotificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.createNotificationChannel(channel)
 
     // Intenção ao tocar na notificação (pode abrir o app)
     val intent = Intent(context, MainActivity::class.java).apply {
