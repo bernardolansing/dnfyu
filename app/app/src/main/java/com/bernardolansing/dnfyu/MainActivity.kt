@@ -22,6 +22,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
@@ -78,6 +84,29 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
 
+            val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (isGranted) {
+                    Log.i("PERMISSION", "Notificação permitida")
+                } else {
+                    Log.i("PERMISSION", "Notificação negada")
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (!hasPermission) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            }
+            
             val status = remember {
                 if (checkBluetoothPermissions(context))
                     mutableStateOf(Status.Searching)
@@ -156,6 +185,14 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Log.i(null, "Bluetooth permissions were denied")
                     // TODO: provide better feedback
+                }
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
                 }
             }
 
@@ -246,6 +283,54 @@ private fun ringAlertSound(context: Context) {
         .build()
     mediaPlayer.setAudioAttributes(attributes)
     mediaPlayer.start()
+
+    showUmbrellaForgottenNotification(context)
+}
+
+private fun showUmbrellaForgottenNotification(context: Context) {
+    val channelId = "umbrella_alert_channel"
+
+    // Cria o canal de notificação (obrigatório no Android 8+)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val name = "Umbrella Alerts"
+        val descriptionText = "Alerts when umbrella is forgotten"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(channelId, name, importance).apply {
+            description = descriptionText
+            enableVibration(true)
+            enableLights(true)
+        }
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    // Intenção ao tocar na notificação (pode abrir o app)
+    val intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+    }
+    val pendingIntent = PendingIntent.getActivity(
+        context,
+        0,
+        intent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+
+    // Monta a notificação
+    val builder = NotificationCompat.Builder(context, channelId)
+        .setSmallIcon(R.drawable.ic_launcher_foreground) // Ícone pequeno (pode mudar)
+        .setContentTitle("Forgot your umbrella?")
+        .setContentText("It looks like your umbrella is out of range.")
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setContentIntent(pendingIntent)
+        .setAutoCancel(true)
+        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setDefaults(NotificationCompat.DEFAULT_ALL)
+        .setVibrate(longArrayOf(0, 500, 500, 500))// Toca som, vibra, etc.
+
+    with(NotificationManagerCompat.from(context)) {
+        notify(1, builder.build())
+    }
 }
 
 @Composable
