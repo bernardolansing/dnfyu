@@ -279,6 +279,7 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
         "Umbrella Scan Service",
         NotificationManager.IMPORTANCE_LOW
     )
+
     val notificationManager = context.getSystemService(NotificationManager::class.java)
     notificationManager.createNotificationChannel(channel)
 
@@ -290,7 +291,14 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
         .build()
 
     val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    NotificationManagerCompat.from(context).notify(2, notification)
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        == PackageManager.PERMISSION_GRANTED) {
+        try {
+            NotificationManagerCompat.from(context).notify(2, notification)
+        } catch (e: SecurityException) {
+            Log.e("BLE", "Notification permission denied", e)
+        }
+    }
 
     btManager.adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 }
@@ -347,7 +355,14 @@ private fun showUmbrellaForgottenNotification(context: Context) {
         .setVibrate(longArrayOf(0, 500, 500, 500))// Toca som, vibra, etc.
 
     with(NotificationManagerCompat.from(context)) {
-        notify(1, builder.build())
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED) {
+            try {
+                NotificationManagerCompat.from(context).notify(1, builder.build())
+            } catch (e: SecurityException) {
+                Log.e("BLE", "Notification permission denied", e)
+            }
+        }
     }
 }
 
