@@ -15,7 +15,6 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.ParcelUuid
-import android.text.style.BackgroundColorSpan
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -290,7 +289,6 @@ private fun startBleScan(context: Context, onUmbrellaFound: (Int) -> Unit) {
         .setOngoing(true)
         .build()
 
-    val service = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
         == PackageManager.PERMISSION_GRANTED) {
         try {
@@ -354,14 +352,12 @@ private fun showUmbrellaForgottenNotification(context: Context) {
         .setDefaults(NotificationCompat.DEFAULT_ALL)
         .setVibrate(longArrayOf(0, 500, 500, 500))// Toca som, vibra, etc.
 
-    with(NotificationManagerCompat.from(context)) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-            == PackageManager.PERMISSION_GRANTED) {
-            try {
-                NotificationManagerCompat.from(context).notify(1, builder.build())
-            } catch (e: SecurityException) {
-                Log.e("BLE", "Notification permission denied", e)
-            }
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        == PackageManager.PERMISSION_GRANTED) {
+        try {
+            NotificationManagerCompat.from(context).notify(1, builder.build())
+        } catch (e: SecurityException) {
+            Log.e("BLE", "Notification permission denied", e)
         }
     }
 }
