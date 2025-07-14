@@ -53,10 +53,10 @@
     <main>
         <!-- Slide 1: Título -->
         <section id="slide1" class="section bg-blue-500 text-white">
-            <div class="fade-in-section max-w-4xl">
-                <h1 class="text-5xl md:text-7xl font-black mb-6">Do Not Forget Your Umbrella</h1>
-                <p class="text-4xl font-bold mb-10">A solução Bluetooth para não esquecer seus pertences</p>
-                <div class="text-2xl opacity-90">
+            <div class="fade-in-section max-w-8xl">
+                <h1 class="text-6xl md:text-8xl font-black mb-10">Do Not Forget Your Umbrella</h1>
+                <p class="text-4xl font-bold mb-48">A solução Bluetooth para não esquecer seus pertences</p>
+                <div class="text-3xl opacity-90 mt-94">
                     <p><span class="font-bold">Apresentado por:</span></p>
                     <p>Augusto Kessler Pires</p>
                     <p>Bernardo Lansing</p>
@@ -68,9 +68,9 @@
 
         <!-- Slide 2: O Problema -->
         <section id="slide2" class="section bg-stone-100">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">O Problema</h2>
-                <ul class="text-3xl text-stone-600 space-y-6">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">O Problema</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
                     <li>- Esquecer objetos pessoais é algo comum, principalmente em rotinas corridas.</li>
                     <li>- Guarda-chuvas, mochilas e bolsas são frequentemente deixados para trás.</li>
                     <li>- Faltava uma solução simples e automática para esse tipo de esquecimento.</li>
@@ -80,9 +80,9 @@
 
         <!-- Slide 3: A Solução -->
         <section id="slide3" class="section bg-stone-200">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">A Solução</h2>
-                <ul class="text-3xl text-stone-600 space-y-6">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">A Solução</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
                     <li>- Dispositivo Bluetooth de baixa energia (BLE) instalado no objeto pessoal.</li>
                     <li>- Aplicativo móvel que monitora a proximidade via sinal BLE.</li>
                     <li>- Notificações são enviadas ao usuário ao se afastar do objeto.</li>
@@ -92,48 +92,33 @@
 
         <!-- Slide 4: Tecnologias Utilizadas -->
         <section id="slide4" class="section bg-stone-100">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">Tecnologias Utilizadas</h2>
-                 <ul class="text-3xl text-stone-600 space-y-6">
-                    <li>- <span class="font-bold">ESP32 com ESP-IDF:</span> responsável por emitir sinais BLE.</li>
-                    <li>- <span class="font-bold">Rust (esp32-nimble):</span> usado para configurar e controlar os anúncios Bluetooth.</li>
-                    <li>- <span class="font-bold">Android com Jetpack Compose:</span> app que detecta e interpreta o sinal.</li>
-                    <li>- <span class="font-bold">Kotlin + Android SDK:</span> para interface e notificações.</li>
+            <div class="fade-in-section max-w-7xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Tecnologias Utilizadas</h2>
+                 <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- O sistema usa Rust com FreeRTOS rodando na ESP32, que emite sinais via Bluetooth Low Energy (BLE).</li>
+                    <li>- O app foi desenvolvido em Android nativo, usando Kotlin com Jetpack Compose.</li>
+                    <li>- A comunicação acontece por Bluetooth de baixa energia (BLE).</li>
                 </ul>
             </div>
         </section>
 
-        <!-- Slide 5: Funcionamento (ESP32) -->
+        <!-- Slide 5: Funcionamento -->
         <section id="slide5" class="section bg-stone-200">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">Funcionamento (ESP32)</h2>
-                <ul class="text-3xl text-stone-600 space-y-6">
-                    <li>- Define UUID exclusivo do serviço Bluetooth.</li>
-                    <li>- Configura os dados de anúncio (appearance code = "tag").</li>
-                    <li>- Define intervalo de broadcast entre 20ms e 40ms.</li>
-                    <li>- Mantém emissão contínua do sinal BLE.</li>
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Funcionamento</h2>
+                 <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- A ESP32 transmite um UUID específico com intervalo de 20-40 ms.</li>
+                    <li>- O app detecta a presença do sinal e monitora a intensidade (RSSI).</li>
+                    <li>- Ao se afastar do objeto (RSSI baixo), o app dispara um alerta.</li>
                 </ul>
             </div>
         </section>
 
-        <!-- Slide 6: Funcionamento (App Android) -->
+        <!-- Slide 6: Resultados Esperados -->
         <section id="slide6" class="section bg-stone-100">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">Funcionamento (App Android)</h2>
-                <ul class="text-3xl text-stone-600 space-y-6">
-                    <li>- Detecta sinais BLE com UUID esperado.</li>
-                    <li>- Mede intensidade do sinal (RSSI).</li>
-                    <li>- Se o sinal enfraquecer abaixo de um limiar → dispara alerta.</li>
-                    <li>- Interface simples com foco em acessibilidade e rapidez.</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Slide 7: Resultados Esperados -->
-        <section id="slide7" class="section bg-stone-200">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">Resultados Esperados</h2>
-                <ul class="text-3xl text-stone-600 space-y-6">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Resultados Esperados</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
                     <li>- Redução de esquecimentos em ambientes públicos.</li>
                     <li>- Solução reutilizável com diferentes tipos de objeto.</li>
                     <li>- Uso eficiente de bateria com BLE.</li>
@@ -141,11 +126,11 @@
             </div>
         </section>
 
-        <!-- Slide 8: Futuro e Melhorias -->
-        <section id="slide8" class="section bg-stone-800 text-white">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold mb-12">Futuro e Melhorias</h2>
-                <ul class="text-3xl opacity-90 space-y-6">
+        <!-- Slide 7: Futuro e Melhorias -->
+        <section id="slide7" class="section bg-stone-800 text-white">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold mb-20">Futuro e Melhorias</h2>
+                <ul class="text-4xl opacity-90 space-y-12">
                     <li>- Adicionar GPS como fallback em locais sem sinal BLE.</li>
                     <li>- Suporte a múltiplos dispositivos por app.</li>
                     <li>- Registro de histórico de alertas.</li>
@@ -153,22 +138,22 @@
             </div>
         </section>
 
-        <!-- Slide 9: Demonstração -->
-        <section id="slide9" class="section bg-stone-100">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-12">Demonstração</h2>
-                <!-- <ul class="text-3xl text-stone-600 space-y-6">
+        <!-- Slide 8: Demonstração -->
+        <section id="slide8" class="section bg-stone-100">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Demonstração</h2>
+                <!-- <ul class="text-4xl text-stone-600 space-y-12">
                     <li>- Mostre a placa ESP32 transmitindo.</li>
                     <li>- App detectando e emitindo alerta.</li>
                 </ul> -->
             </div>
         </section>
 
-        <!-- Slide 10: Conclusão -->
-        <section id="slide10" class="section bg-blue-500 text-white">
-            <div class="fade-in-section max-w-4xl">
-                <h2 class="text-5xl md:text-6xl font-bold mb-12">Conclusão</h2>
-                <ul class="text-3xl opacity-90 space-y-6">
+        <!-- Slide 9: Conclusão -->
+        <section id="slide9" class="section bg-blue-500 text-white">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold mb-20">Conclusão</h2>
+                <ul class="text-4xl opacity-90 space-y-12">
                     <!-- <li>- Simples, prático e eficaz.</li> -->
                     <li>- Usa tecnologias acessíveis e de baixo consumo.</li>
                     <li>- Pode ser expandido para diversos casos de uso além de guarda-chuva.</li>
