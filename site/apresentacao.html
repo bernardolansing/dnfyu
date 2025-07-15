@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação - Do Not Forget Your Umbrella</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            position: relative; 
+        }
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        ul {
+            list-style-position: inside;
+            text-align: left;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-stone-100/80 backdrop-blur-md fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="index.html" class="font-bold text-2xl text-stone-800">☂️ DNFYU</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="text-xl text-stone-600 hover:text-blue-500 transition-colors font-bold">Página Inicial</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Slide 1: Título -->
+        <section id="slide1" class="section bg-blue-500 text-white">
+            <div class="fade-in-section max-w-8xl">
+                <h1 class="text-6xl md:text-8xl font-black mb-10">Do Not Forget Your Umbrella</h1>
+                <p class="text-4xl font-bold mb-48">A solução Bluetooth para não esquecer seus pertences</p>
+                <div class="text-3xl opacity-90 mt-94">
+                    <p><span class="font-bold">Apresentado por:</span></p>
+                    <p>Augusto Kessler Pires</p>
+                    <p>Bernardo Lansing</p>
+                    <p>Sofia Popsin Gomes</p>
+                    <p>Thiago Trautwein Santos</p>
+                </div>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-white/50">1 / 9</div>
+        </section>
+
+        <!-- Slide 2: O Problema -->
+        <section id="slide2" class="section bg-stone-100">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">O Problema</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- Esquecer objetos pessoais é algo comum, principalmente em rotinas corridas.</li>
+                    <li>- Guarda-chuvas, mochilas e bolsas são frequentemente deixados para trás.</li>
+                    <li>- Faltava uma solução simples e automática para esse tipo de esquecimento.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">2 / 9</div>
+        </section>
+
+        <!-- Slide 3: A Solução -->
+        <section id="slide3" class="section bg-stone-200">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">A Solução</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- Dispositivo Bluetooth Low Energy (BLE) instalado no objeto pessoal.</li>
+                    <li>- Aplicativo móvel que monitora a proximidade via sinal BLE.</li>
+                    <li>- Notificações são enviadas ao usuário ao se afastar do objeto.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">3 / 9</div>
+        </section>
+
+        <!-- Slide 4: Tecnologias Utilizadas -->
+        <section id="slide4" class="section bg-stone-100">
+            <div class="fade-in-section max-w-7xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Tecnologias Utilizadas</h2>
+                 <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- O sistema usa Rust com FreeRTOS rodando na ESP32, que emite sinais via Bluetooth Low Energy (BLE).</li>
+                    <li>- O app foi desenvolvido em Android nativo, usando Kotlin com Jetpack Compose.</li>
+                    <li>- A comunicação acontece por Bluetooth Low Energy (BLE).</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">4 / 9</div>
+        </section>
+
+        <!-- Slide 5: Funcionamento -->
+        <section id="slide5" class="section bg-stone-200">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Funcionamento</h2>
+                 <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- A ESP32 transmite um UUID específico com intervalo de 20-40 ms.</li>
+                    <li>- O app detecta a presença do sinal e monitora a intensidade (RSSI).</li>
+                    <li>- Ao se afastar do objeto (RSSI baixo), o app dispara um alerta.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">5 / 9</div>
+        </section>
+
+        <!-- Slide 6: Resultados Esperados -->
+        <section id="slide6" class="section bg-stone-100">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Resultados Esperados</h2>
+                <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- Redução de esquecimentos em ambientes públicos.</li>
+                    <li>- Solução reutilizável com diferentes tipos de objeto.</li>
+                    <li>- Uso eficiente de bateria com BLE.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">6 / 9</div>
+        </section>
+
+        <!-- Slide 7: Futuro e Melhorias -->
+        <section id="slide7" class="section bg-stone-800 text-white">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold mb-20">Futuro e Melhorias</h2>
+                <ul class="text-4xl opacity-90 space-y-12">
+                    <li>- Adicionar GPS como fallback em locais sem sinal BLE.</li>
+                    <li>- Suporte a múltiplos dispositivos por app.</li>
+                    <li>- Registro de histórico de alertas.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-white/50">7 / 9</div>
+        </section>
+
+        <!-- Slide 8: Demonstração -->
+        <section id="slide8" class="section bg-stone-100">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold text-stone-800 mb-20">Demonstração</h2>
+                <!-- <ul class="text-4xl text-stone-600 space-y-12">
+                    <li>- Mostre a placa ESP32 transmitindo.</li>
+                    <li>- App detectando e emitindo alerta.</li>
+                </ul> -->
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-stone/50">8 / 9</div>
+        </section>
+
+        <!-- Slide 9: Conclusão -->
+        <section id="slide9" class="section bg-blue-500 text-white">
+            <div class="fade-in-section max-w-8xl">
+                <h2 class="text-6xl md:text-7xl font-bold mb-20">Conclusão</h2>
+                <ul class="text-4xl opacity-90 space-y-12">
+                    <!-- <li>- Simples, prático e eficaz.</li> -->
+                    <li>- Usa tecnologias acessíveis e de baixo consumo.</li>
+                    <li>- Pode ser expandido para diversos casos de uso além de guarda-chuva.</li>
+                </ul>
+            </div>
+            <div class="absolute bottom-8 right-8 text-2xl font-bold text-white/50">9 / 9</div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.fade-in-section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>

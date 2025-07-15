@@ -1,0 +1,320 @@
+<!-- python3 -m http.server 8000 -->
+<!-- localhost:8000 -->
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do Not Forget Your Umbrella - O Guardião dos Seus Pertences</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Stone) with Blue accent -->
+    <!-- Application Structure Plan: A vertical, single-page storytelling format that follows the narrative of the source presentation. Each 'slide' is a full-screen section. A sticky navigation allows non-linear access, but the primary user flow is scrolling down. This structure was chosen because it best translates the linear, narrative-driven source material into an engaging web experience, making the user feel like they are being told a story as they scroll. -->
+    <!-- Visualization & Content Choices: Section 1 (Caos): Goal=Emotion, Method=Full-screen section with text animations triggered by scroll to create a dramatic opening. Section 2 (Vilão): Goal=Personify Problem, Method=Styled HTML to display the user-provided Gremlin image and highlight key pain points. Section 4 (Magia): Goal=Explain Tech, Method=Two-column layout with CSS animations (pulse effect) to represent the Bluetooth signal visually. Section 5 (Jornada): Goal=Show Ease of Use, Method=A step-by-step diagram and a Chart.js polar area chart to visually represent the "scanning" radar, making the process tangible and interactive. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1.5rem;
+            text-align: center;
+        }
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            height: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                max-width: 400px;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-stone-100/80 backdrop-blur-md fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#hero" class="font-bold text-2xl text-stone-800">☂️ DNFYU</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="/#problema" class="text-xl text-stone-600 hover:text-blue-500 transition-colors">O Problema</a>
+                <a href="/#solucao" class="text-xl text-stone-600 hover:text-blue-500 transition-colors">A Solução</a>
+                <a href="/#como-funciona" class="text-xl text-stone-600 hover:text-blue-500 transition-colors">Como Funciona</a>
+                <a href="/#futuro" class="text-xl text-stone-600 hover:text-blue-500 transition-colors">O Futuro</a>
+                <a href="apresentacao.html" class="text-xl text-stone-600 hover:text-blue-500 transition-colors font-bold">Apresentação</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="section bg-stone-200">
+            <div class="fade-in-section max-w-4xl">
+                <h1 class="text-5xl md:text-7xl font-black text-stone-800 mb-6">Você conhece essa cena?</h1>
+                <p class="text-3xl text-stone-600">
+                    A pressa. A chuva. A certeza de que está esquecendo algo... mas o quê? Você bate a porta e vai embora. Só para, no meio do caminho, perceber: o guarda-chuva ficou para trás. De novo.
+                </p>
+                <h2 class="mt-10 text-5xl font-bold text-blue-600">Há um vilão invisível no seu dia a dia.</h2>
+            </div>
+        </section>
+
+        <section id="problema" class="section bg-stone-100">
+            <div class="fade-in-section max-w-5xl grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+                <div class="text-center md:text-left">
+                    <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-6">Conheça o Gremlin do Esquecimento</h2>
+                    <p class="text-3xl text-stone-600 mb-8">
+                        Ele é mestre em se esconder nos momentos de distração. Ele adora o som de um "Ah, não acredito!" quando você percebe que seus pertences mais importantes ficaram para trás.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-stone-200 flex-1">
+                            <h3 class="font-bold text-3xl mb-2">Custo do Vilão</h3>
+                            <p class="text-stone-600 text-2xl">Estresse, tempo e dinheiro.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md border border-stone-200 flex-1">
+                            <h3 class="font-bold text-3xl mb-2">Arma Principal</h3>
+                            <p class="text-stone-600 text-2xl">A nossa mente ocupada.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <img src="gremlin_mau_sem_fundo.png" alt="Imagem do Gremlin do Esquecimento segurando um guarda-chuva" >
+                </div>
+            </div>
+        </section>
+
+        <section id="solucao" class="section bg-blue-500 text-white">
+            <div class="fade-in-section max-w-4xl">
+                <div class="text-9xl mb-8 animate-bounce">☂️</div>
+                <h2 class="text-5xl md:text-6xl font-bold mb-6">A Chegada do Herói</h2>
+                <p class="text-3xl opacity-90 mb-6">
+                    E se a tecnologia pudesse ser o seu guardião pessoal contra o Gremlin do Esquecimento?
+                </p>
+                <p class="text-5xl md:text-7xl font-black bg-white text-blue-500 px-6 py-3 rounded-lg inline-block">Do Not Forget Your Umbrella</p>
+                <p class="mt-8 text-4xl font-bold">Seu alarme pessoal para o que realmente importa.</p>
+            </div>
+        </section>
+
+        <section id="como-funciona" class="section bg-stone-100">
+            <div class="fade-in-section container mx-auto">
+                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-16">A Magia por Trás do Emblema</h2>
+                <div class="grid md:grid-cols-2 gap-12 text-left">
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-stone-200">
+                        <h3 class="text-4xl font-bold mb-6 text-center">O Amuleto (A Tag)</h3>
+                        <div class="flex justify-center mb-6">
+                            <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center pulse">
+                                <span class="text-5xl">📡</span>
+                            </div>
+                        </div>
+                        <p class="text-stone-600 text-2xl leading-relaxed">
+                            Um pequeno dispositivo, nosso 'amuleto digital', que você anexa a qualquer objeto. Dentro dele, um coração poderoso (um chip <span class="font-bold">ESP32</span>) pulsa usando a linguagem dos guerreiros da eficiência, o <span class="font-bold">Rust</span>. Ele envia um sinal constante, um "estou aqui!", usando a magia do <span class="font-bold">Bluetooth Low Energy</span>.
+                        </p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-stone-200">
+                        <h3 class="text-4xl font-bold mb-6 text-center">O Oráculo (O App)</h3>
+                        <div class="flex justify-center mb-6">
+                            <div class="w-20 h-20 bg-stone-800 rounded-full flex items-center justify-center">
+                                <span class="text-5xl">📱</span>
+                            </div>
+                        </div>
+                        <p class="text-stone-600 text-2xl leading-relaxed">
+                            No seu celular, nosso 'oráculo' (o app Android) escuta esse sinal. Desenvolvido com o poder e a elegância do <span class="font-bold">Kotlin</span> e <span class="font-bold">Jetpack Compose</span>, ele sabe exatamente onde seus pertences estão, pronto para te avisar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="jornada" class="section bg-stone-200">
+            <div class="fade-in-section container mx-auto">
+                <h2 class="text-5xl md:text-6xl font-bold text-stone-800 mb-6">A Jornada do Usuário</h2>
+                <p class="text-3xl text-stone-600 mb-16 max-w-3xl mx-auto">E usar é mais fácil que se esquecer de algo.</p>
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="flex flex-col gap-8 text-left">
+                        <div class="bg-white p-8 rounded-lg shadow-sm border border-stone-300">
+                            <h3 class="text-4xl font-bold text-blue-600 mb-2">1. Proteja seu Tesouro</h3>
+                            <p class="text-stone-600 mt-1 text-2xl">Prenda o amuleto no seu item valioso.</p>
+                        </div>
+                         <div class="bg-white p-8 rounded-lg shadow-sm border border-stone-300">
+                            <h3 class="text-4xl font-bold text-blue-600 mb-2">2. Convoque o Guardião</h3>
+                            <p class="text-stone-600 mt-1 text-2xl">Com um toque, dê ao nosso app a permissão para usar seus sentidos (o Bluetooth).</p>
+                        </div>
+                         <div class="bg-white p-8 rounded-lg shadow-sm border border-stone-300">
+                            <h3 class="text-4xl font-bold text-blue-600 mb-2">3. Sinta a Paz</h3>
+                            <p class="text-stone-600 mt-1 text-2xl">O app imediatamente começa a vigiar. Enquanto ele sentir o pulso do seu amuleto, tudo está bem.</p>
+                        </div>
+                    </div>
+                    <div>
+                         <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                        <p class="mt-6 text-3xl font-bold text-stone-700">Buscando...</p>
+                    </div>
+                </div>
+                 <p class="mt-16 text-4xl italic text-stone-700">"É como ter um sexto sentido para os meus objetos."</p>
+            </div>
+        </section>
+
+        <section id="futuro" class="section bg-stone-800 text-white">
+            <div class="fade-in-section container mx-auto">
+                <h2 class="text-5xl md:text-6xl font-bold mb-16">O Próximo Capítulo da Saga</h2>
+                <p class="text-3xl opacity-90 mb-16 max-w-3xl mx-auto">Mas a jornada do nosso herói está apenas começando. Em breve, ele terá novos poderes:</p>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-stone-700 p-8 rounded-xl transform hover:scale-105 transition-transform">
+                        <div class="text-6xl mb-4">🚨</div>
+                        <h3 class="text-4xl font-bold mb-3">O Grito de Alerta</h3>
+                        <p class="opacity-80 text-2xl">Se você se afastar demais, seu celular irá soar um alarme: 'Ei, você está esquecendo sua mochila!'</p>
+                    </div>
+                    <div class="bg-stone-700 p-8 rounded-xl transform hover:scale-105 transition-transform">
+                        <div class="text-6xl mb-4">🗺️</div>
+                        <h3 class="text-4xl font-bold mb-3">O Mapa do Tesouro</h3>
+                        <p class="opacity-80 text-2xl">Perdeu as chaves em casa? O app mostrará um 'mapa de calor' para você encontrá-las.</p>
+                    </div>
+                    <div class="bg-stone-700 p-8 rounded-xl transform hover:scale-105 transition-transform">
+                        <div class="text-6xl mb-4">🔊</div>
+                        <h3 class="text-4xl font-bold mb-3">O Chamado do Guardião</h3>
+                        <p class="opacity-80 text-2xl">Faça a tag emitir um som para encontrar seus itens ainda mais rápido.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer id="contato" class="section bg-blue-500 text-white">
+             <div class="fade-in-section max-w-4xl">
+                <div class="text-8xl mb-8">🛡️</div>
+                <h2 class="text-5xl md:text-6xl font-bold mb-6">Junte-se à Resistência</h2>
+                <p class="text-3xl opacity-90 mb-10">
+                    Chega de deixar o Gremlin do Esquecimento vencer. É hora de trazer a tranquilidade de volta para a sua rotina.
+                </p>
+                <p class="text-5xl font-black bg-white text-blue-500 px-6 py-3 rounded-lg inline-block">Menos esquecimento. Mais vida.</p>
+                <div class="mt-16">
+                     <a href="#" class="bg-white text-blue-600 font-bold py-4 px-10 rounded-full text-3xl hover:bg-stone-200 transition-colors">Saiba Mais</a>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.fade-in-section');
+            const radarCanvas = document.getElementById('radarChart');
+            let radarChart;
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        
+                        if (entry.target.contains(radarCanvas) && !radarChart) {
+                           createRadarChart();
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            function createRadarChart() {
+                const ctx = radarCanvas.getContext('2d');
+                radarChart = new Chart(ctx, {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Chaves', 'Carteira', 'Guarda-Chuva', 'Mochila', 'Notebook'],
+                        datasets: [{
+                            label: 'Intensidade do Sinal',
+                            data: [75, 90, 50, 60, 40],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.5)',
+                                'rgba(34, 197, 94, 0.5)',
+                                'rgba(239, 68, 68, 0.2)',
+                                'rgba(249, 115, 22, 0.5)',
+                                'rgba(239, 68, 68, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(34, 197, 94, 1)',
+                                'rgba(239, 68, 68, 0.5)',
+                                'rgba(249, 115, 22, 1)',
+                                'rgba(239, 68, 68, 0.5)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                ticks: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#44403c', // stone-700
+                                    font: {
+                                        family: "'Inter', sans-serif",
+                                        size: 16
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true,
+                            duration: 1500
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
